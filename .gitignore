@@ -1,0 +1,15 @@
+# General
+.DS_Store
+.env
+.env.*
+*.swp
+*.swo
+*.log
+tmp/
+dist/
+build/
+coverage/
+node_modules/
+.venv/
+.pytest_cache/
+.cache/
