@@ -1,0 +1,30 @@
+schema: spec-driven
+
+context: |
+  Tech stack: POSIX shell, tmux CLI (no external dependencies)
+  Entry point: bin/tmux-session-glyphs (single script)
+  Performance target: <10ms typical render, single-shot execution per status refresh
+
+  Architecture:
+  - State priority model: bell > activity > long_job > attached > zoomed > copy_mode
+  - Each session maps to exactly one glyph based on highest-priority active state
+  - State read from tmux list-sessions, list-windows, list-panes
+  - Config precedence: env vars (TSG_*) > ~/.config/tmux-session-glyphs.conf > config/glyphs.conf
+
+  Conventions:
+  - POSIX sh only, shellcheck-clean
+  - No daemons or long-running processes
+  - Read-only display component — never creates or kills tmux sessions
+  - Theming with Nerd Font default + ASCII fallback
+  - Integrates with drews/dotfiles tmux session management
+
+  Testing: snapshot tests with mocked tmux output, shellcheck lint
+  Domain: tmux sessions/windows/panes, Nerd Font glyphs, terminal status lines
+
+rules:
+  proposal:
+    - Keep proposals concise — this is a small shell utility
+    - Always consider performance impact (<10ms budget)
+  tasks:
+    - Prefer minimal, incremental changes over large rewrites
+    - Shell scripts must pass shellcheck
