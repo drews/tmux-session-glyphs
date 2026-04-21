@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+# tmux-session-glyphs — render per-session state/identity glyphs for tmux status.
+#
+# Output: tmux format string, one glyph per session, each wrapped in
+# #[range=user|<sess>]...#[norange] for mouse-click session switching.
+#
+# Priority per session: bell > activity (background) > identity
+#   - bell:     window bell flag set anywhere in session
+#   - activity: window activity flag set anywhere (non-current sessions only)
+#   - identity: emoji + ROYGBV color from $TSG_EMOJI_FILE, or default glyph
+#                 current session: bright + bold   others: dimmed
+#
+# Configuration precedence (high → low):
+#   environment TSG_* > tmux @tsg_* options > ~/.config/tmux-session-glyphs.conf
+#   > config/glyphs.conf (repo defaults)
+#
+# Exit 0 always (status-line must not fail).
+
+set -uo pipefail
+
+# ── Resolve repo root, source config in precedence order ────────────────────
+#   Precedence: env > tmux @tsg_* options > ~/.config/tmux-session-glyphs.conf > config/glyphs.conf
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd "$script_dir/.." && pwd)"
+
+# Snapshot TSG_* env vars so they win unconditionally over lower layers.
+declare -A _tsg_env
+while IFS='=' read -r k v; do
+  _tsg_env["$k"]="$v"
+done < <(env | grep '^TSG_' || true)
+
+# User config (plain `=` OK; later layers that should win override explicitly).
+[[ -r "$HOME/.config/tmux-session-glyphs.conf" ]] && . "$HOME/.config/tmux-session-glyphs.conf"
+
+# Read tmux @tsg_* options (when running inside tmux). These override user config
+# but not env. Empty/unset tmux options are skipped.
+read_tmux_opt() {
+  local opt="$1" var="$2" val
+  val="$(tmux show-option -gv "$opt" 2>/dev/null)" || return 0
+  [[ -z "$val" ]] && return 0
+  printf -v "$var" '%s' "$val"
+  export "$var"
+}
+read_tmux_opt "@tsg_theme"                  TSG_THEME
+read_tmux_opt "@tsg_emoji_file"             TSG_EMOJI_FILE
+read_tmux_opt "@tsg_dim_color"              TSG_DIM_COLOR
+read_tmux_opt "@tsg_current_fallback_color" TSG_CURRENT_FALLBACK_COLOR
+read_tmux_opt "@tsg_bell_color"             TSG_BELL_COLOR
+read_tmux_opt "@tsg_activity_color"         TSG_ACTIVITY_COLOR
+read_tmux_opt "@tsg_longjob_color"          TSG_LONGJOB_COLOR
+read_tmux_opt "@tsg_longjob_secs"           TSG_LONGJOB_SECS
+read_tmux_opt "@tsg_default_glyph"          TSG_DEFAULT_GLYPH
+read_tmux_opt "@tsg_glyph_bell_nerd"        TSG_GLYPH_BELL_NERD
+read_tmux_opt "@tsg_glyph_activity_nerd"    TSG_GLYPH_ACTIVITY_NERD
+read_tmux_opt "@tsg_glyph_longjob_nerd"     TSG_GLYPH_LONGJOB_NERD
+read_tmux_opt "@tsg_glyph_bell_ascii"       TSG_GLYPH_BELL_ASCII
+read_tmux_opt "@tsg_glyph_activity_ascii"   TSG_GLYPH_ACTIVITY_ASCII
+read_tmux_opt "@tsg_glyph_longjob_ascii"    TSG_GLYPH_LONGJOB_ASCII
+read_tmux_opt "@tsg_glyph_default_ascii"    TSG_GLYPH_DEFAULT_ASCII
+
+# Restore env snapshot so environment wins over both user config and tmux options.
+for k in "${!_tsg_env[@]}"; do
+  printf -v "$k" '%s' "${_tsg_env[$k]}"
+  export "$k"
+done
+
+# Repo defaults use `:=` — only fills vars still unset after env + tmux + user config.
+. "$repo_root/config/glyphs.conf"
+
+# ── Theme glyph selection ───────────────────────────────────────────────────
+case "${TSG_THEME}" in
+  ascii)
+    GLYPH_BELL="$TSG_GLYPH_BELL_ASCII"
+    GLYPH_ACTIVITY="$TSG_GLYPH_ACTIVITY_ASCII"
+    GLYPH_LONGJOB="$TSG_GLYPH_LONGJOB_ASCII"
+    GLYPH_DEFAULT="$TSG_GLYPH_DEFAULT_ASCII"
+    ;;
+  *)
+    GLYPH_BELL="$TSG_GLYPH_BELL_NERD"
+    GLYPH_ACTIVITY="$TSG_GLYPH_ACTIVITY_NERD"
+    GLYPH_LONGJOB="$TSG_GLYPH_LONGJOB_NERD"
+    GLYPH_DEFAULT="$TSG_DEFAULT_GLYPH"
+    ;;
+esac
+
+# ── Collect session list + per-session state in as few tmux calls as possible
+current="$(tmux display -p '#S' 2>/dev/null || true)"
+
+sessions_raw="$(tmux list-sessions -F '#{session_name}|#{session_attached}' 2>/dev/null)" || exit 0
+[[ -z "$sessions_raw" ]] && exit 0
+
+# Aggregate bell/activity flags across all windows in one call.
+declare -A bell_for activity_for
+while IFS='|' read -r s bell act; do
+  [[ -z "$s" ]] && continue
+  [[ "$bell" == "1" ]] && bell_for[$s]=1
+  [[ "$act"  == "1" ]] && activity_for[$s]=1
+done < <(tmux list-windows -a -F '#{session_name}|#{window_bell_flag}|#{window_activity_flag}' 2>/dev/null)
+
+# ── Identity lookups from session-emoji.json (optional) ────────────────────
+have_jq=0
+command -v jq >/dev/null 2>&1 && have_jq=1
+have_emoji_file=0
+[[ $have_jq -eq 1 && -f "$TSG_EMOJI_FILE" ]] && have_emoji_file=1
+
+lookup_icon() {
+  # ASCII theme: identity icons from JSON are Nerd Font glyphs — skip them.
+  if [[ "$TSG_THEME" == "ascii" ]]; then
+    printf '%s' "$GLYPH_DEFAULT"
+    return
+  fi
+  (( have_emoji_file )) || { printf '%s' "$GLYPH_DEFAULT"; return; }
+  local v
+  v="$(jq -r --arg s "$1" '.[$s].icon // empty' "$TSG_EMOJI_FILE" 2>/dev/null)"
+  [[ -z "$v" ]] && v="$GLYPH_DEFAULT"
+  printf '%s' "$v"
+}
+
+lookup_color() {
+  (( have_emoji_file )) || { printf '%s' "$TSG_DIM_COLOR"; return; }
+  local v
+  v="$(jq -r --arg s "$1" '.[$s].color // empty' "$TSG_EMOJI_FILE" 2>/dev/null)"
+  [[ -z "$v" ]] && v="$TSG_DIM_COLOR"
+  printf '%s' "$v"
+}
+
+# ── ROYGBV sort by identity color ──────────────────────────────────────────
+roygbv_key() {
+  case "$1" in
+    '#f38ba8') echo 0 ;;  # red
+    '#fab387') echo 1 ;;  # peach
+    '#f9e2af') echo 2 ;;  # yellow
+    '#a6e3a1') echo 3 ;;  # green
+    '#89b4fa') echo 4 ;;  # blue
+    '#b4befe') echo 5 ;;  # lavender
+    *)         echo 6 ;;  # unassigned
+  esac
+}
+
+# Build parallel arrays of (session, sort_key) then order.
+sess_list=()
+keys=()
+while IFS='|' read -r s _attached; do
+  [[ -z "$s" ]] && continue
+  sess_list+=("$s")
+  keys+=("$(roygbv_key "$(lookup_color "$s")")")
+done <<< "$sessions_raw"
+
+ordered=()
+for k in 0 1 2 3 4 5 6; do
+  for i in "${!keys[@]}"; do
+    [[ "${keys[$i]}" == "$k" ]] && ordered+=("${sess_list[$i]}")
+  done
+done
+
+# ── Render ──────────────────────────────────────────────────────────────────
+out=""
+for s in "${ordered[@]}"; do
+  is_current=0
+  [[ "$s" == "$current" ]] && is_current=1
+
+  glyph=""; color=""; style=""
+
+  if [[ -n "${bell_for[$s]+x}" ]]; then
+    glyph="$GLYPH_BELL"
+    color="$TSG_BELL_COLOR"
+    style="bold"
+  elif [[ -n "${activity_for[$s]+x}" && $is_current -eq 0 ]]; then
+    glyph="$GLYPH_ACTIVITY"
+    color="$TSG_ACTIVITY_COLOR"
+    style=""
+  else
+    glyph="$(lookup_icon "$s")"
+    if (( is_current )); then
+      idc="$(lookup_color "$s")"
+      # If no identity color available (no emoji file / no entry), use bright fallback.
+      [[ "$idc" == "$TSG_DIM_COLOR" ]] && idc="$TSG_CURRENT_FALLBACK_COLOR"
+      color="$idc"
+      style="bold"
+    else
+      color="$TSG_DIM_COLOR"
+      style=""
+    fi
+  fi
+
+  if [[ -n "$style" ]]; then
+    out+="#[range=user|${s}]#[fg=${color},${style}]${glyph}#[norange,no${style}] "
+  else
+    out+="#[range=user|${s}]#[fg=${color}]${glyph}#[norange] "
+  fi
+done
+
+printf '%s' "${out% }"

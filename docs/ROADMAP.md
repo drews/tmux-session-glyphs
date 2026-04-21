@@ -1,23 +1,28 @@
 # Roadmap
 
-## v0 (MVP)
-- [ ] Script skeleton: `bin/tmux-session-glyphs` prints placeholder glyphs.
-- [ ] Default theme + ASCII fallback mapping.
-- [ ] Basic tmux integration snippet in README.
-- [ ] Docs: PLAN, ROADMAP, INTEGRATION, STATES.
+## v1 (bootstrap + plugin distribution)
+Functional, drop-in replacement for the live `~/.tmux/bin/session-glyphs`, packaged as a TPM plugin. Merges per-session identity (emoji + ROYGBV color from `session-emoji.json`) with state-driven glyph/color modulation on a priority order.
 
-## v1
-- [ ] Implement real state detection (attached/activity/bell/long-job).
-- [ ] Config precedence (env, user config, repo defaults).
-- [ ] Optional 1–2s cache for long-job checks.
-- [ ] Demo script and snapshot tests.
+- [x] `bin/tmux-session-glyphs` — single-script renderer, bash.
+- [x] State detection: `bell`, `activity`, `attached` via tmux format flags.
+- [x] Priority merge: bell > activity > identity (current bright / others dim).
+- [x] Identity input: read `~/.local/share/tmux/resurrect/session-emoji.json` if present; fall back to default base glyph otherwise.
+- [x] ROYGBV session sort order (ported from live script).
+- [x] Mouse-click markup: wrap each glyph in `#[range=user|<sess>]...#[norange]` — preserves `.tmux.conf` click contract.
+- [x] ASCII fallback theme (`TSG_THEME=ascii`).
+- [x] Config precedence: env > tmux `@tsg_*` options > `~/.config/tmux-session-glyphs.conf` > `config/glyphs.conf` defaults.
+- [x] TPM plugin layout (`session_glyphs.tmux` entry, `@tsg_script` path variable).
+- [x] README with TPM install + `@tsg_*` configuration docs.
 
 ## v1.1
-- [ ] Extra states (zoomed/copy/unseen windows) behind flags.
-- [ ] Screenshots and theme showcase.
-- [ ] Shellcheck and simple CI.
+- [ ] Extra states: `long_job` (pane runtime threshold), `zoomed`, `copy_mode`.
+- [ ] Optional 1–2s cache for long-job checks.
+- [ ] JSON parse optimization (single read, bash assoc array) to cut jq subprocess overhead.
+- [ ] `shellcheck` pass + simple CI.
+- [ ] Snapshot tests with mocked tmux output.
+- [ ] Demo script showing all themes.
 
 ## v1.2
-- [ ] TPM-friendly plugin layout and install instructions.
-- [ ] Additional themes and color palettes.
+- [ ] Additional built-in themes and color palettes.
 - [ ] Performance profiling notes and tunables.
+- [ ] Auto-detect Nerd Font availability; fall back to ASCII when absent.

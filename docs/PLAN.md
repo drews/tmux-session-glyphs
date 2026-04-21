@@ -14,15 +14,16 @@ Render compact, per-session glyphs for tmux status, inspired by tmux-session-dot
 - Heavy dependencies or long-running daemons.
 
 ## Architecture
-- Entry point: `bin/tmux-session-glyphs` (single script).
+- Entry point: `bin/tmux-session-glyphs` (single script, bash).
 - Config sources (precedence):
   1) Environment variables (e.g., `TSG_*`).
   2) User config `~/.config/tmux-session-glyphs.conf` (optional).
   3) Repo defaults `config/glyphs.conf` (optional).
 - Data collection: `tmux list-sessions`, `list-windows`, `list-panes` with format fields to derive states.
 - State model (per session): attached, activity, bell, long-job, zoomed/copy (optional), unseen windows (optional).
-- Mapping: state → glyph + color according to theme.
-- Output: single line of grouped session glyphs, optionally highlighting current client session.
+- Identity source (optional): `~/.local/share/tmux/resurrect/session-emoji.json` (maintained by `session-emoji` script) — provides per-session icon + ROYGBV color. Parsed via `jq` when present. Absent → all sessions render the default base glyph.
+- Priority merge per session: state glyph (bell/activity/long_job) surfaces when active; otherwise the identity emoji renders (bright+bold for current session, dim for others). Priority order defined in `STATES_AND_GLYPHS.md`.
+- Output: single line of per-session glyphs, each wrapped in `#[range=user|<sess>]...#[norange]` so tmux mouse handlers can resolve `#{mouse_status_range}` to a session name for click-to-switch.
 
 ## Integration with drews/dotfiles
 - Read palette/timing options if exposed via tmux options (e.g., `@palette_*`, refresh interval).
