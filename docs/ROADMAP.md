@@ -15,10 +15,11 @@ Functional, drop-in replacement for the live `~/.tmux/bin/session-glyphs`, packa
 - [x] README with TPM install + `@tsg_*` configuration docs.
 
 ## v1.1
-- [ ] Extra states: `long_job` (pane runtime threshold), `zoomed`, `copy_mode`.
-- [ ] Optional 1–2s cache for long-job checks.
-- [ ] JSON parse optimization (single read, bash assoc array) to cut jq subprocess overhead.
-- [ ] `shellcheck` pass + simple CI.
+- [x] Extra states: `zoomed`, `copy_mode`.
+- [x] JSON parse optimization (single jq call, bash assoc arrays).
+- [x] `shellcheck` clean at `--severity=warning`.
+- [ ] `long_job` state (pane runtime threshold) + optional 1–2s cache.
+- [ ] CI: shellcheck on push.
 - [ ] Snapshot tests with mocked tmux output.
 - [ ] Demo script showing all themes.
 
