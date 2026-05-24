@@ -1,51 +1,34 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Project context for AI assistants. Vision and behavior live elsewhere; this file is conventions + pointers.
 
-## Project Overview
+## Pointers
 
-**tmux-session-glyphs** is a lightweight, shell-first utility that renders per-session glyphs in tmux status lines. It integrates with `drews/dotfiles` tmux session management as a read-only display component — it never creates or kills sessions.
+- **Vision, pillars, anti-goals** → `openspec/project.md`
+- **Behavior contract** → `openspec/specs/glyph-rendering.md`
+- **Stack, rules, perf budget** → `openspec/config.yaml`
+- **Release phases** → `docs/ROADMAP.md`
+- **User-facing usage** → `README.md`
 
-- **Language**: POSIX shell (no external dependencies beyond tmux CLI)
-- **Entry point**: `bin/tmux-session-glyphs` (not yet implemented)
-- **Performance target**: <10ms typical render, single-shot execution per status refresh
+## Conventions
 
-## Architecture
+- Language: **bash** (not strict POSIX — uses arrays and `printf -v`).
+- Hard deps: `tmux` only. `jq` is an optional accelerator.
+- `shellcheck --severity=warning` must pass on `bin/*` and `*.tmux`.
+- The script must always exit 0; a failing status-line component is a UX bug.
+- The output contract `#[range=user|<sess>]...#[norange]` is non-negotiable — every glyph wraps in it.
+- No comments unless the *why* is non-obvious. Don't narrate *what*.
+- Defaults flow through `:=` in `config/glyphs.conf`; never use plain `=` there.
 
-### State Model (priority order)
-bell → activity → long_job → attached → zoomed → copy_mode
+## Quick commands
 
-Each session is mapped to exactly one glyph based on highest-priority active state. State is read from `tmux list-sessions`, `list-windows`, `list-panes`.
+```bash
+./bin/tmux-session-glyphs                                 # render once
+TSG_THEME=ascii ./bin/tmux-session-glyphs                 # force ASCII theme
+shellcheck --severity=warning bin/tmux-session-glyphs session_glyphs.tmux
+time ./bin/tmux-session-glyphs >/dev/null                 # perf check (<50ms target)
+```
 
-### Configuration Precedence
-1. Environment variables (`TSG_*`)
-2. `~/.config/tmux-session-glyphs.conf`
-3. `config/glyphs.conf` (repo defaults)
+## When in doubt
 
-Key env vars: `TSG_THEME`, `TSG_LONGJOB_SECS`, `TSG_ONLY_ATTACHED`, `TSG_HIDE_EMPTY`
-
-### Theming
-- Default: Nerd Font glyphs (nf-fa-circle, nf-fa-bolt, nf-fa-bell, nf-fa-hourglass_half, nf-fa-expand, nf-fa-copy)
-- ASCII fallback: `*`, `o`, `!`, `b`, `+`, `Z`, `C`
-- Auto-detect Nerd Fonts; fall back to ASCII if unavailable
-
-## Build & Test
-
-No build system yet. Planned:
-- `shellcheck` for linting
-- Snapshot tests with mocked tmux output
-- Demo script for visual verification across themes
-
-## Key Documentation
-
-- `docs/PLAN.md` — detailed architecture and implementation plan
-- `docs/ROADMAP.md` — release phases v0 through v1.2
-- `docs/STATES_AND_GLYPHS.md` — state model, glyph mappings, color palette
-- `docs/INTEGRATION.md` — tmux status-line integration examples
-
-## Roadmap Phases
-
-- **v0 (MVP)**: Script skeleton, default theme, ASCII fallback
-- **v1**: Real state detection, config precedence, cache, snapshot tests
-- **v1.1**: Extra states (zoomed, copy_mode), shellcheck/CI
-- **v1.2**: TPM plugin layout, additional themes, performance profiling
+If a proposed change conflicts with the design pillars in `openspec/project.md`, push back. The pillars are the project's preferred direction — restate them and ask before working around them.

@@ -1,30 +1,32 @@
 schema: spec-driven
 
 context: |
-  Tech stack: POSIX shell, tmux CLI (no external dependencies)
+  Vision, design pillars, anti-goals: see openspec/project.md
+  Behavior contract: see openspec/specs/glyph-rendering.md
+
+  Tech stack: bash, tmux CLI; jq optional (identity file accelerator)
   Entry point: bin/tmux-session-glyphs (single script)
-  Performance target: <10ms typical render, single-shot execution per status refresh
+  TPM entry: session_glyphs.tmux (exposes @tsg_script)
+  Performance budget: <50ms wall-clock per render
 
-  Architecture:
-  - State priority model: bell > activity > long_job > attached > zoomed > copy_mode
-  - Each session maps to exactly one glyph based on highest-priority active state
-  - State read from tmux list-sessions, list-windows, list-panes
-  - Config precedence: env vars (TSG_*) > ~/.config/tmux-session-glyphs.conf > config/glyphs.conf
+  Config precedence (high → low):
+    env TSG_* > tmux @tsg_* options > ~/.config/tmux-session-glyphs.conf > config/glyphs.conf
 
-  Conventions:
-  - POSIX sh only, shellcheck-clean
-  - No daemons or long-running processes
-  - Read-only display component — never creates or kills tmux sessions
-  - Theming with Nerd Font default + ASCII fallback
-  - Integrates with drews/dotfiles tmux session management
+  Output contract (non-negotiable):
+    #[range=user|<sess>]...#[norange] per glyph — enables click-to-switch
 
-  Testing: snapshot tests with mocked tmux output, shellcheck lint
-  Domain: tmux sessions/windows/panes, Nerd Font glyphs, terminal status lines
+  Integration: read-only against drews/dotfiles session management
+    (session-emoji, resurrect). Never creates, renames, or kills sessions.
+
+  Testing: shellcheck --severity=warning; snapshot tests planned with mocked tmux
 
 rules:
   proposal:
     - Keep proposals concise — this is a small shell utility
-    - Always consider performance impact (<10ms budget)
+    - Check the proposal against design pillars in openspec/project.md
+    - Always consider performance impact (<50ms budget)
   tasks:
     - Prefer minimal, incremental changes over large rewrites
-    - Shell scripts must pass shellcheck
+    - Shell scripts must pass shellcheck --severity=warning
+    - The script must always exit 0; status-line failures are UX bugs
+    - Preserve the #[range=user|...] output contract on every glyph
