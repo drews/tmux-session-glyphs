@@ -32,3 +32,14 @@ Functional, drop-in replacement for the live `~/.tmux/bin/session-glyphs`, packa
 - [ ] Additional built-in themes and color palettes
 - [ ] Performance profiling notes and tunables
 - [ ] Auto-detect Nerd Font availability; fall back to ASCII when absent
+
+## Backlog (open issues, phase TBD)
+
+- [#1](https://github.com/drews/tmux-session-glyphs/issues/1) — opt-in window count suffix per glyph (`@tsg_show_window_count`).
+- [#2](https://github.com/drews/tmux-session-glyphs/issues/2) — additional pane-level signals:
+  - `dead pane` / non-zero exit status — proposed slot between `bell` and `activity`
+  - `silence` (`#{window_silence_flag}`) — structural state, near `zoomed`/`copy_mode`
+  - `linked` window (`#{window_linked}`) — niche, may stay deferred
+  - (`zoomed` is already shipped in v1.1; `long_job` is already planned in v1.1)
+
+Any change to the priority chain requires an OpenSpec proposal updating `openspec/specs/glyph-rendering.md`.
