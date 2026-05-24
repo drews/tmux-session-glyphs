@@ -1,6 +1,6 @@
 # Roadmap
 
-Phase tracking for `tmux-session-glyphs`. Vision and behavior contract are tracked separately — see [`openspec/project.md`](../openspec/project.md) and [`openspec/specs/glyph-rendering.md`](../openspec/specs/glyph-rendering.md). Behavioral changes go through OpenSpec proposals (`openspec/changes/`); checkbox progress on planned phases lives here.
+Phase tracking for `tmux-session-glyphs`. Vision and behavior contract are tracked separately — see [`openspec/project.md`](../openspec/project.md) and [`openspec/specs/glyph-rendering.md`](../openspec/specs/glyph-rendering.md). Behavioral changes go through OpenSpec proposals (`openspec/changes/`); every unchecked item below is linked to a GitHub issue.
 
 ## v1 — bootstrap + plugin distribution
 
@@ -22,24 +22,24 @@ Functional, drop-in replacement for the live `~/.tmux/bin/session-glyphs`, packa
 - [x] JSON parse optimization (single jq call → assoc arrays)
 - [x] `shellcheck --severity=warning` clean
 - [x] Docs restructure: vision in `openspec/project.md`, behavior in `openspec/specs/`
-- [ ] `long_job` state (pane runtime threshold) + optional 1–2s cache
-- [ ] CI: shellcheck on push
-- [ ] Snapshot tests with mocked tmux output
-- [ ] Demo script showing all themes
+- [ ] [#3](https://github.com/drews/tmux-session-glyphs/issues/3) `long_job` state (pane runtime threshold) + optional 1–2s cache
+- [ ] [#4](https://github.com/drews/tmux-session-glyphs/issues/4) CI: shellcheck on push and PR
+- [ ] [#5](https://github.com/drews/tmux-session-glyphs/issues/5) Snapshot tests with mocked tmux output
+- [ ] [#6](https://github.com/drews/tmux-session-glyphs/issues/6) Demo script showing all themes
 
 ## v1.2
 
-- [ ] Additional built-in themes and color palettes
-- [ ] Performance profiling notes and tunables
-- [ ] Auto-detect Nerd Font availability; fall back to ASCII when absent
+- [ ] [#7](https://github.com/drews/tmux-session-glyphs/issues/7) Additional built-in themes and color palettes
+- [ ] [#8](https://github.com/drews/tmux-session-glyphs/issues/8) Performance profiling notes and tunables
+- [ ] [#9](https://github.com/drews/tmux-session-glyphs/issues/9) Auto-detect Nerd Font availability; fall back to ASCII when absent
 
-## Backlog (open issues, phase TBD)
+## Backlog (phase TBD)
 
 - [#1](https://github.com/drews/tmux-session-glyphs/issues/1) — opt-in window count suffix per glyph (`@tsg_show_window_count`).
 - [#2](https://github.com/drews/tmux-session-glyphs/issues/2) — additional pane-level signals:
   - `dead pane` / non-zero exit status — proposed slot between `bell` and `activity`
   - `silence` (`#{window_silence_flag}`) — structural state, near `zoomed`/`copy_mode`
   - `linked` window (`#{window_linked}`) — niche, may stay deferred
-  - (`zoomed` is already shipped in v1.1; `long_job` is already planned in v1.1)
+  - (`zoomed` is already shipped in v1.1; `long_job` is tracked in [#3](https://github.com/drews/tmux-session-glyphs/issues/3))
 
 Any change to the priority chain requires an OpenSpec proposal updating `openspec/specs/glyph-rendering.md`.
