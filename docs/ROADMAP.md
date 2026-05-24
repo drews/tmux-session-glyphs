@@ -36,6 +36,7 @@ Functional, drop-in replacement for the live `~/.tmux/bin/session-glyphs`, packa
 ## Backlog (phase TBD)
 
 - [#1](https://github.com/drews/tmux-session-glyphs/issues/1) — opt-in window count suffix per glyph (`@tsg_show_window_count`).
+- [#10](https://github.com/drews/tmux-session-glyphs/issues/10) — opt-in blinking / inverted-fg-bg attention style for high-priority states.
 - [#2](https://github.com/drews/tmux-session-glyphs/issues/2) — additional pane-level signals:
   - `dead pane` / non-zero exit status — proposed slot between `bell` and `activity`
   - `silence` (`#{window_silence_flag}`) — structural state, near `zoomed`/`copy_mode`
