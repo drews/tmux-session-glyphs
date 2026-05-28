@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Mock tmux for snapshot tests.
+# Routes the small subset of subcommands used by bin/tmux-session-glyphs to
+# fixture files in $MOCK_TMUX_FIXTURE_DIR. Unknown invocations: silent exit 0.
+
+set -u
+
+dir="${MOCK_TMUX_FIXTURE_DIR:-}"
+[[ -z "$dir" ]] && exit 0
+
+cmd="${1:-}"
+case "$cmd" in
+  display)
+    [[ -f "$dir/display.out" ]] && cat "$dir/display.out"
+    ;;
+  list-sessions)
+    [[ -f "$dir/list-sessions.out" ]] && cat "$dir/list-sessions.out"
+    ;;
+  list-windows)
+    [[ -f "$dir/list-windows.out" ]] && cat "$dir/list-windows.out"
+    ;;
+  list-panes)
+    [[ -f "$dir/list-panes.out" ]] && cat "$dir/list-panes.out"
+    ;;
+  show-option)
+    # Usage: tmux show-option -gv <opt>. The renderer always uses -gv form.
+    opt="${3:-}"
+    [[ -z "$opt" || ! -f "$dir/options.conf" ]] && exit 0
+    # Match "opt=value" (no quotes); first match wins.
+    line="$(grep -E "^${opt}=" "$dir/options.conf" 2>/dev/null | head -1)"
+    [[ -n "$line" ]] && printf '%s\n' "${line#*=}"
+    ;;
+  *)
+    : # silent no-op
+    ;;
+esac
+exit 0

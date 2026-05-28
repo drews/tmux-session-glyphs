@@ -1,0 +1,1 @@
+#[range=user|red-session]#[fg=#585b70]R#[norange] #[range=user|yellow-session]#[fg=#f9e2af,bold]Y#[norange,nobold] #[range=user|blue-session]#[fg=#cba6f7]CP#[norange]

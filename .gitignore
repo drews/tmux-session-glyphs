@@ -13,3 +13,6 @@ node_modules/
 .venv/
 .pytest_cache/
 .cache/
+
+# Created at test runtime by tests/run-tests.sh — symlinks to host's bash 4+
+tests/mock-bin/bash

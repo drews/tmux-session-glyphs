@@ -1,0 +1,5 @@
+{
+  "red-session":    { "icon": "R", "color": "#f38ba8" },
+  "yellow-session": { "icon": "Y", "color": "#f9e2af" },
+  "blue-session":   { "icon": "B", "color": "#89b4fa" }
+}

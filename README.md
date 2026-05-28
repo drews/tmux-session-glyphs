@@ -86,6 +86,15 @@ Run the script outside tmux to inspect the raw tmux-format markup:
 
 The script always exits 0; if you see empty output, it means no tmux server was reachable or no sessions exist.
 
+## Tests
+
+```sh
+./tests/run-tests.sh                       # snapshot tests (mock tmux on PATH)
+shellcheck --severity=warning bin/* *.tmux tests/run-tests.sh tests/mock-bin/tmux
+```
+
+Add new behaviors? Add a fixture directory under `tests/fixtures/` with the appropriate inputs and an `expected` golden file. CI (`.github/workflows/ci.yml`) runs both on every push.
+
 ## Status
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for current phase and what's next.

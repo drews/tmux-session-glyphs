@@ -23,8 +23,8 @@ Functional, drop-in replacement for the live `~/.tmux/bin/session-glyphs`, packa
 - [x] `shellcheck --severity=warning` clean
 - [x] Docs restructure: vision in `openspec/project.md`, behavior in `openspec/specs/`
 - [ ] [#3](https://github.com/drews/tmux-session-glyphs/issues/3) `long_job` state (pane runtime threshold) + optional 1–2s cache
-- [ ] [#4](https://github.com/drews/tmux-session-glyphs/issues/4) CI: shellcheck on push and PR
-- [ ] [#5](https://github.com/drews/tmux-session-glyphs/issues/5) Snapshot tests with mocked tmux output
+- [x] [#4](https://github.com/drews/tmux-session-glyphs/issues/4) CI: shellcheck on push and PR
+- [x] [#5](https://github.com/drews/tmux-session-glyphs/issues/5) Snapshot tests with mocked tmux output
 - [ ] [#6](https://github.com/drews/tmux-session-glyphs/issues/6) Demo script showing all themes
 
 ## v1.2
