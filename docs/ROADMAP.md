@@ -35,6 +35,7 @@ Functional, drop-in replacement for the live `~/.tmux/bin/session-glyphs`, packa
 
 ## Backlog (phase TBD)
 
+- [#11](https://github.com/drews/tmux-session-glyphs/issues/11) — **bug**: `TSG_GLYPH_*_NERD` defaults are empty strings (found by snapshot tests).
 - [#1](https://github.com/drews/tmux-session-glyphs/issues/1) — opt-in window count suffix per glyph (`@tsg_show_window_count`).
 - [#10](https://github.com/drews/tmux-session-glyphs/issues/10) — opt-in blinking / inverted-fg-bg attention style for high-priority states.
 - [#2](https://github.com/drews/tmux-session-glyphs/issues/2) — additional pane-level signals:
